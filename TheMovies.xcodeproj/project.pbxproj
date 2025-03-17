@@ -57,15 +57,11 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		36EFCD362D887DDB00767BBE /* TheMoviesTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = TheMoviesTests;
 			sourceTree = "<group>";
 		};
 		36EFCD402D887DDB00767BBE /* TheMoviesUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = TheMoviesUITests;
 			sourceTree = "<group>";
 		};
@@ -139,7 +135,6 @@
 				69B0DC5AF653470D19D97DF2 /* Pods-TheMoviesTests.debug.xcconfig */,
 				4B28A32BEDF1D20640A37047 /* Pods-TheMoviesTests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
