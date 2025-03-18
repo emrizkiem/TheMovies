@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MovieViewController" customModule="TheMovies" customModuleProvider="target">
+            <connections>
+                <outlet property="activityIndicator" destination="RQR-Nt-WQR" id="Cwd-ua-XCa"/>
+                <outlet property="collectionView" destination="AkZ-Oa-YXE" id="vsZ-xg-SzW"/>
+                <outlet property="searchBar" destination="9Wj-m2-KpW" id="cNQ-A0-pV7"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <searchBar contentMode="redraw" placeholder="Search" translatesAutoresizingMaskIntoConstraints="NO" id="9Wj-m2-KpW">
+                    <rect key="frame" x="0.0" y="59" width="393" height="56"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <color key="barTintColor" red="0.78823529411764703" green="0.18823529411764706" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <textInputTraits key="textInputTraits"/>
+                </searchBar>
+                <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="AkZ-Oa-YXE">
+                    <rect key="frame" x="0.0" y="115" width="393" height="703"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Wxg-hB-QDI">
+                        <size key="itemSize" width="180" height="260"/>
+                        <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                        <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                        <inset key="sectionInset" minX="10" minY="10" maxX="10" maxY="10"/>
+                    </collectionViewFlowLayout>
+                </collectionView>
+                <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="RQR-Nt-WQR">
+                    <rect key="frame" x="178" y="407.66666666666669" width="37" height="37"/>
+                </activityIndicatorView>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="9Wj-m2-KpW" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" id="8J2-sF-2Ov"/>
+                <constraint firstItem="AkZ-Oa-YXE" firstAttribute="top" secondItem="9Wj-m2-KpW" secondAttribute="bottom" id="8lq-Ox-Ogh"/>
+                <constraint firstItem="RQR-Nt-WQR" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="FD2-Bs-Jcj"/>
+                <constraint firstItem="9Wj-m2-KpW" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="R4C-5C-jqv"/>
+                <constraint firstItem="AkZ-Oa-YXE" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="VWc-kE-x3b"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="bottom" secondItem="AkZ-Oa-YXE" secondAttribute="bottom" id="cAU-Nx-Bm6"/>
+                <constraint firstItem="9Wj-m2-KpW" firstAttribute="trailing" secondItem="fnl-2z-Ty3" secondAttribute="trailing" id="fmS-Qf-bXd"/>
+                <constraint firstItem="RQR-Nt-WQR" firstAttribute="centerY" secondItem="i5M-Pr-FkT" secondAttribute="centerY" id="mKH-WF-K2M"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="AkZ-Oa-YXE" secondAttribute="trailing" id="pGG-Ah-2fV"/>
+            </constraints>
+            <point key="canvasLocation" x="47.692307692307693" y="20.616113744075829"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

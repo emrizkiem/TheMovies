@@ -2,7 +2,7 @@
 //  MovieViewController.swift
 //  TheMovies
 //
-//  Created by M. Rizki Maulana on 17/03/25.
+//  Created by M. Rizki Maulana on 18/03/25.
 //
 
 import UIKit
@@ -10,19 +10,10 @@ import RxSwift
 import RxCocoa
 
 class MovieViewController: UIViewController {
-  private lazy var tableView: UITableView = {
-    let tableView = UITableView()
-    tableView.register(MovieCell.self, forCellReuseIdentifier: "MovieCell")
-    tableView.translatesAutoresizingMaskIntoConstraints = false
-    return tableView
-  }()
   
-  private lazy var activityIndicator: UIActivityIndicatorView = {
-    let indicator = UIActivityIndicatorView(style: .large)
-    indicator.translatesAutoresizingMaskIntoConstraints = false
-    indicator.hidesWhenStopped = true
-    return indicator
-  }()
+  @IBOutlet weak var collectionView: UICollectionView!
+  @IBOutlet weak var searchBar: UISearchBar!
+  @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
   
   private lazy var refreshControl: UIRefreshControl = {
     let refreshControl = UIRefreshControl()
@@ -34,7 +25,7 @@ class MovieViewController: UIViewController {
   
   init(viewModel: MovieViewModel) {
     self.viewModel = viewModel
-    super.init(nibName: nil, bundle: nil)
+    super.init(nibName: "MovieViewController", bundle: nil)
   }
   
   required init?(coder: NSCoder) {
@@ -48,29 +39,42 @@ class MovieViewController: UIViewController {
     
     viewModel.loadTrigger.accept(())
   }
-
+  
   private func setupUI() {
-    title = "Movies"
-    view.backgroundColor = .white
+    title = "Hey, Welcome Back!"
+    let navBarColor = UIColor(red: 0.788, green: 0.188, blue: 0.188, alpha: 1.0)
     
-    view.addSubview(tableView)
-    view.addSubview(activityIndicator)
-    tableView.addSubview(refreshControl)
+    if #available(iOS 15.0, *) {
+      let appearance = UINavigationBarAppearance()
+      appearance.configureWithOpaqueBackground()
+      appearance.backgroundColor = navBarColor
+      appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+      navigationController?.navigationBar.standardAppearance = appearance
+      navigationController?.navigationBar.scrollEdgeAppearance = appearance
+    } else {
+      navigationController?.navigationBar.barTintColor = navBarColor
+      navigationController?.navigationBar.isTranslucent = false
+      navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+    }
     
-    NSLayoutConstraint.activate([
-      tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-      tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-      
-      activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-    ])
+    collectionView.register(MovieCell.nib(), forCellWithReuseIdentifier: MovieCell.identifier)
+    collectionView.backgroundColor = .systemGray6
+    collectionView.alwaysBounceVertical = true
+    collectionView.refreshControl = refreshControl
+    
+    searchBar.barTintColor = UIColor(red: 145.0, green: 34.0, blue: 40.0, alpha: 1.0)
+    searchBar.tintColor = .black
+    
+    if let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+      let screenWidth = UIScreen.main.bounds.width
+      let itemWidth = (screenWidth - 30) / 2
+      layout.itemSize = CGSize(width: itemWidth, height: itemWidth * 1.4)
+    }
   }
   
   private func setupBindings() {
     viewModel.movies
-      .bind(to: tableView.rx.items(cellIdentifier: "MovieCell", cellType: MovieCell.self)) { (row, movie, cell) in
+      .bind(to: collectionView.rx.items(cellIdentifier: MovieCell.identifier, cellType: MovieCell.self)) { (row, movie, cell) in
         cell.configure(with: movie)
       }
       .disposed(by: disposeBag)
@@ -98,7 +102,7 @@ class MovieViewController: UIViewController {
       })
       .disposed(by: disposeBag)
     
-    tableView.rx.willDisplayCell
+    collectionView.rx.willDisplayCell
       .subscribe(onNext: { [weak self] cell, indexPath in
         guard let self = self else { return }
         let lastRow = self.viewModel.movies.value.count - 1
@@ -108,13 +112,20 @@ class MovieViewController: UIViewController {
       })
       .disposed(by: disposeBag)
     
-    tableView.rx.itemSelected
+    collectionView.rx.itemSelected
       .subscribe(onNext: { [weak self] indexPath in
         guard let self = self else { return }
         let movie = self.viewModel.movies.value[indexPath.row]
         self.showMovieDetail(movie: movie)
       })
       .disposed(by: disposeBag)
+    
+//    searchBar.rx.text
+//      .orEmpty
+//      .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+//      .distinctUntilChanged()
+//      .bind(to: viewModel.searchTrigger)
+//      .disposed(by: disposeBag)
   }
   
   private func showAlert(message: String) {
@@ -126,7 +137,8 @@ class MovieViewController: UIViewController {
   private func showMovieDetail(movie: Movie) {
     // Implement navigation to movie detail screen
     // Example:
-    // let detailVC = MovieDetailViewController(movie: movie)
+    // let detailVM = MovieDetailViewModel(movie: movie, movieRepository: MovieRepository())
+    // let detailVC = MovieDetailViewController(viewModel: detailVM)
     // navigationController?.pushViewController(detailVC, animated: true)
   }
 }

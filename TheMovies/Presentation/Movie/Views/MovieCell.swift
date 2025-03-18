@@ -6,57 +6,62 @@
 //
 
 import UIKit
+import Kingfisher
 
-class MovieCell: UITableViewCell {
+class MovieCell: UICollectionViewCell {
+
+  @IBOutlet weak var posterImageView: UIImageView!
+  @IBOutlet weak var titleLabel: UILabel!
+  @IBOutlet weak var releaseDateLabel: UILabel!
+  @IBOutlet weak var ratingStackView: UIStackView!
   
-  private let titleLabel: UILabel = {
-    let label = UILabel()
-    label.font = .systemFont(ofSize: 16, weight: .bold)
-    label.translatesAutoresizingMaskIntoConstraints = false
-    return label
-  }()
+  static let identifier = "MovieCell"
   
-  private let posterImageView: UIImageView = {
-    let imageView = UIImageView()
-    imageView.contentMode = .scaleAspectFill
-    imageView.clipsToBounds = true
-    imageView.translatesAutoresizingMaskIntoConstraints = false
-    return imageView
-  }()
-  
-  override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-    super.init(style: style, reuseIdentifier: reuseIdentifier)
+  override func awakeFromNib() {
+    super.awakeFromNib()
     setupUI()
   }
   
-  required init?(coder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
-  
   private func setupUI() {
-    contentView.addSubview(posterImageView)
-    contentView.addSubview(titleLabel)
+    contentView.layer.cornerRadius = 8
+    contentView.layer.masksToBounds = true
     
-    NSLayoutConstraint.activate([
-      posterImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-      posterImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-      posterImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-      posterImageView.widthAnchor.constraint(equalToConstant: 80),
-      posterImageView.heightAnchor.constraint(equalToConstant: 120),
-      
-      titleLabel.leadingAnchor.constraint(equalTo: posterImageView.trailingAnchor, constant: 12),
-      titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-      titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
-    ])
+    layer.shadowColor = UIColor.black.cgColor
+    layer.shadowOffset = CGSize(width: 0, height: 2)
+    layer.shadowRadius = 4
+    layer.shadowOpacity = 0.1
+    layer.masksToBounds = false
   }
   
   func configure(with movie: Movie) {
     titleLabel.text = movie.title
+    releaseDateLabel.text = movie.releaseDate
     
-    // Load image using your preferred image loading library
-    // Example with Kingfisher:
-    // if let url = URL(string: movie.posterPath) {
-    //     posterImageView.kf.setImage(with: url, placeholder: UIImage(named: "placeholder"))
-    // }
+    configureRating(movie.voteAverage)
+    
+    if let posterPath = movie.posterPath, let url = URL(string: NetworkConfig.imageBaseURL + posterPath) {
+      posterImageView.kf.setImage(with: url)
+      posterImageView.contentMode = .scaleAspectFill
+    }
+  }
+  
+  private func configureRating(_ rating: Double) {
+    let starRating = rating / 2.0
+    
+    for (index, view) in ratingStackView.arrangedSubviews.enumerated() {
+      if let starImageView = view as? UIImageView {
+        if Double(index) + 0.5 <= starRating {
+          starImageView.image = UIImage(systemName: "star.fill")
+        } else if Double(index) < starRating {
+          starImageView.image = UIImage(systemName: "star.leadinghalf.fill")
+        } else {
+          starImageView.image = UIImage(systemName: "star")
+        }
+      }
+    }
+  }
+  
+  static func nib() -> UINib {
+    return UINib(nibName: "MovieCell", bundle: nil)
   }
 }
