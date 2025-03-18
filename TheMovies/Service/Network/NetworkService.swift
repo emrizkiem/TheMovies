@@ -7,7 +7,6 @@
 
 import Moya
 import RxSwift
-import RxMoya
 
 protocol NetworkServiceProtocol {
   func request<T: Decodable>(_ endpoint: NetworkEndpoints) -> Observable<T>
@@ -30,16 +29,16 @@ final class NetworkService: NetworkServiceProtocol {
           switch moyaError {
           case .statusCode(let response):
             if response.statusCode == 401 {
-              return Observable<Any>.error(ApiError.unauthorized)
+              return Observable<T>.error(ApiError.unauthorized)
             }
-            return Observable.error(ApiError.serverError(response.statusCode))
+            return Observable<T>.error(ApiError.serverError(response.statusCode))
           case .underlying(let nsError, _):
-            return Observable.error(ApiError.networkError(nsError))
+            return Observable<T>.error(ApiError.networkError(nsError))
           default:
-            return Observable.error(ApiError.unknown)
+            return Observable<T>.error(ApiError.unknown)
           }
         }
-        return Observable.error(ApiError.unknown)
+        return Observable<T>.error(ApiError.unknown)
       }
   }
 }
