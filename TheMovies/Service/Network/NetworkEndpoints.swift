@@ -23,11 +23,11 @@ extension NetworkEndpoints: TargetType {
   
   var path: String {
     switch self {
-    case .movie(let page):
+    case .movie:
       return "/discover/movie"
     case .movieDetail(let id):
       return "/movie/\(id)"
-    case .searchMovie(let query, let page):
+    case .searchMovie:
       return "/search/movie"
     }
   }
@@ -48,7 +48,7 @@ extension NetworkEndpoints: TargetType {
         parameters: ["page": page],
         encoding: URLEncoding.queryString
       )
-    case .movieDetail(let id):
+    case .movieDetail:
       return .requestParameters(
         parameters: [:],
         encoding: URLEncoding.queryString
