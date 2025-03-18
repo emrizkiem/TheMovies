@@ -84,7 +84,7 @@ class MovieViewController: UIViewController {
       .disposed(by: disposeBag)
     
     refreshControl.rx.controlEvent(.valueChanged)
-      .bind(to: viewModel.loadTrigger)
+      .bind(to: viewModel.refreshTrigger)
       .disposed(by: disposeBag)
     
     viewModel.error

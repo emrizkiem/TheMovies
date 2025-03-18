@@ -11,6 +11,7 @@ import CoreData
 protocol MovieLocalDataSourceProtocol {
   func saveMovies(_ movies: [Movie]) -> Completable
   func getMovies() -> Observable<[Movie]>
+  func clearAllMovies() -> Completable
 }
 
 final class MovieLocalDataSource: MovieLocalDataSourceProtocol {
@@ -62,6 +63,26 @@ final class MovieLocalDataSource: MovieLocalDataSourceProtocol {
           observer.onCompleted()
         } catch {
           observer.onError(error)
+        }
+      }
+      return Disposables.create()
+    }
+  }
+  
+  func clearAllMovies() -> Completable {
+    return Completable.create { [weak self] completable in
+      guard let self = self else { return Disposables.create() }
+      
+      self.context.perform {
+        let fetchRequest: NSFetchRequest<NSFetchRequestResult> = MovieEntity.fetchRequest()
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        
+        do {
+          try self.context.execute(deleteRequest)
+          try self.context.save()
+          completable(.completed)
+        } catch {
+          completable(.error(error))
         }
       }
       return Disposables.create()

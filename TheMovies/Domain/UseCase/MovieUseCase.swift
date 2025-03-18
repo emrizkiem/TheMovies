@@ -9,6 +9,8 @@ import RxSwift
 
 protocol MovieUseCaseProtocol {
   func execute(page: Int) -> Observable<MovieList>
+  func refresh(page: Int) -> Observable<MovieList>
+  func clearCache() -> Completable
 }
 
 final class MovieUseCase: MovieUseCaseProtocol {
@@ -20,5 +22,13 @@ final class MovieUseCase: MovieUseCaseProtocol {
   
   func execute(page: Int) -> Observable<MovieList> {
     return repository.getMovies(page: page)
+  }
+  
+  func refresh(page: Int) -> Observable<MovieList> {
+    return repository.refreshMovies(page: page)
+  }
+  
+  func clearCache() -> Completable {
+    return repository.clearLocalCache()
   }
 }

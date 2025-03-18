@@ -11,6 +11,8 @@ import RxCocoa
 final class MovieViewModel {
   let loadTrigger = PublishRelay<Void>()
   let loadMoreTrigger = PublishRelay<Void>()
+  let refreshTrigger = PublishRelay<Void>()
+  let clearCacheTrigger = PublishRelay<Void>()
   let movies = BehaviorRelay<[Movie]>(value: [])
   let isLoading = BehaviorRelay<Bool>(value: false)
   let error = PublishRelay<String>()
@@ -36,6 +38,27 @@ final class MovieViewModel {
       .flatMapLatest { [weak self] _ -> Observable<MovieList> in
         guard let self = self else { return Observable.empty() }
         return self.useCase.execute(page: self.currentPage)
+          .catch { error in
+            self.error.accept(error.localizedDescription)
+            return Observable.empty()
+          }
+      }
+      .do(onNext: { [weak self] list in
+        self?.totalPages = list.totalPages
+        self?.isLoading.accept(false)
+      })
+      .map { $0.results }
+      .bind(to: movies)
+      .disposed(by: disposeBag)
+      
+    refreshTrigger
+      .do(onNext: { [weak self] _ in
+        self?.isLoading.accept(true)
+        self?.currentPage = 1
+      })
+      .flatMapLatest { [weak self] _ -> Observable<MovieList> in
+        guard let self = self else { return Observable.empty() }
+        return self.useCase.refresh(page: 1)
           .catch { error in
             self.error.accept(error.localizedDescription)
             return Observable.empty()
@@ -76,6 +99,23 @@ final class MovieViewModel {
         return self.movies.value + list.results
       }
       .bind(to: movies)
+      .disposed(by: disposeBag)
+      
+    clearCacheTrigger
+      .flatMapLatest { [weak self] _ -> Observable<Void> in
+        guard let self = self else { return Observable.empty() }
+        return self.useCase.clearCache()
+          .andThen(Observable.just(()))
+          .catch { error in
+            self.error.accept("Failed to clear cache: \(error.localizedDescription)")
+            return Observable.empty()
+          }
+      }
+      .subscribe(onNext: { [weak self] _ in
+        self?.currentPage = 1
+        self?.totalPages = 1
+        self?.movies.accept([])
+      })
       .disposed(by: disposeBag)
   }
 }
