@@ -10,6 +10,7 @@ import RxSwift
 
 protocol MovieRemoteDataSourceProtocol {
   func fetchMovies(page: Int) -> Observable<MovieList>
+  func searchMovies(query: String, page: Int) -> Observable<MovieList>
 }
 
 final class MovieRemoteDataSource: MovieRemoteDataSourceProtocol {
@@ -22,5 +23,8 @@ final class MovieRemoteDataSource: MovieRemoteDataSourceProtocol {
   func fetchMovies(page: Int) -> Observable<MovieList> {
     return networkService.request(.movie(page: page))
   }
+  
+  func searchMovies(query: String, page: Int) -> Observable<MovieList> {
+    return networkService.request(.searchMovie(query: query, page: page))
+  }
 }
-

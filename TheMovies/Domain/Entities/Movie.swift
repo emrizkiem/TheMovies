@@ -52,5 +52,3 @@ struct Movie: Decodable {
     case genreIds = "genre_ids"
   }
 }
-
-

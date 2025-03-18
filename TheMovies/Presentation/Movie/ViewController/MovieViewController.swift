@@ -120,12 +120,18 @@ class MovieViewController: UIViewController {
       })
       .disposed(by: disposeBag)
     
-//    searchBar.rx.text
-//      .orEmpty
-//      .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
-//      .distinctUntilChanged()
-//      .bind(to: viewModel.searchTrigger)
-//      .disposed(by: disposeBag)
+    searchBar.rx.text
+      .orEmpty
+      .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+      .distinctUntilChanged()
+      .bind(to: viewModel.searchTrigger)
+      .disposed(by: disposeBag)
+      
+    searchBar.rx.searchButtonClicked
+      .subscribe(onNext: { [weak self] in
+        self?.searchBar.resignFirstResponder()
+      })
+      .disposed(by: disposeBag)
   }
   
   private func showAlert(message: String) {
