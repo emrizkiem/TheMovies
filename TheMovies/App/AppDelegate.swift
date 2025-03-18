@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     guard let movieViewController = DependencyContainer.shared.container.resolve(MovieViewController.self) else {
       return false
     }
-  
+    
     if #available(iOS 13.0, *) {
       
     } else {
@@ -35,4 +35,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
   }
 }
-
