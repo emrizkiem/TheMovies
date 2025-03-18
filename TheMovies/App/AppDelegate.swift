@@ -6,17 +6,22 @@
 //
 
 import UIKit
+import Swinject
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
   
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    guard let movieViewController = DependencyContainer.shared.container.resolve(MovieViewController.self) else {
+      return false
+    }
+  
     if #available(iOS 13.0, *) {
+      
     } else {
       window = UIWindow(frame: UIScreen.main.bounds)
       
-      let movieViewController = MovieViewController.create()
       let navigationController = UINavigationController(rootViewController: movieViewController)
       window?.rootViewController = navigationController
       window?.makeKeyAndVisible()

@@ -8,11 +8,11 @@
 import Moya
 import RxSwift
 
-protocol MovieRemoteDataSource {
+protocol MovieRemoteDataSourceProtocol {
   func fetchMovies(page: Int) -> Observable<MovieList>
 }
 
-final class MovieRemoteDataSourceImpl: MovieRemoteDataSource {
+final class MovieRemoteDataSource: MovieRemoteDataSourceProtocol {
   private let networkService: NetworkServiceProtocol
   
   init(networkService: NetworkServiceProtocol) {

@@ -7,11 +7,11 @@
 
 import RxSwift
 
-protocol GetMoviesUseCase {
+protocol MovieUseCaseProtocol {
   func execute(page: Int) -> Observable<MovieList>
 }
 
-final class GetMoviesUseCaseImpl: GetMoviesUseCase {
+final class MovieUseCase: MovieUseCaseProtocol {
   private let repository: MovieRepositoryProtocol
   
   init(repository: MovieRepositoryProtocol) {
