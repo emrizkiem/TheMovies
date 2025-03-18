@@ -26,6 +26,7 @@ class MovieDetailViewController: UIViewController {
   private let viewModel: MovieDetailViewModel
   private let disposeBag = DisposeBag()
   private var movieId: Int = 0
+  private var currentMovieDetail: MovieDetail?
   
   init(viewModel: MovieDetailViewModel, movieId: Int) {
     self.viewModel = viewModel
@@ -64,6 +65,7 @@ class MovieDetailViewController: UIViewController {
     viewModel.getMovieDetail()
       .drive(onNext: { [weak self] movieDetail in
         guard let self = self, let movieDetail = movieDetail else { return }
+        self.currentMovieDetail = movieDetail
         self.updateUI(with: movieDetail)
       })
       .disposed(by: disposeBag)
@@ -142,11 +144,14 @@ class MovieDetailViewController: UIViewController {
   }
   
   @objc private func openIMDB() {
-    // Implementasi buka IMDB di sini
-    // Contoh: jika Anda memiliki IMDB ID
-    // if let imdbId = movieDetail.imdbId {
-    //     let url = URL(string: "https://www.imdb.com/title/\(imdbId)")
-    //     UIApplication.shared.open(url!)
-    // }
+    if let imdbId = currentMovieDetail?.imdbID, !imdbId.isEmpty,
+      let imdbURL = URL(string: NetworkConfig.baseURLTMDB + imdbId) {
+      let webViewController = WebViewController(url: imdbURL, title: "\(titleLabel.text ?? "Movie")")
+      navigationController?.pushViewController(webViewController, animated: true)
+    } else {
+      let alert = UIAlertController(title: "Information", message: "IMDb ID not available for this movie.", preferredStyle: .alert)
+      alert.addAction(UIAlertAction(title: "OK", style: .default))
+      present(alert, animated: true)
+    }
   }
 }
