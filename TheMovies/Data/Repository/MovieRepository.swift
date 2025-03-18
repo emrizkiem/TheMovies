@@ -11,6 +11,7 @@ protocol MovieRepositoryProtocol {
   func getMovies(page: Int) -> Observable<MovieList>
   func refreshMovies(page: Int) -> Observable<MovieList>
   func searchMovies(query: String, page: Int) -> Observable<MovieList>
+  func detailMovies(_ id: Int) -> Observable<MovieDetail>
   func clearLocalCache() -> Completable
 }
 
@@ -98,6 +99,10 @@ final class MovieRepository: MovieRepositoryProtocol {
         print("Error saat mencari movie: \(error.localizedDescription)")
         return Observable.empty()
       }
+  }
+  
+  func detailMovies(_ id: Int) -> Observable<MovieDetail> {
+    return remoteDataSource.detailMovies(id)
   }
   
   func clearLocalCache() -> Completable {

@@ -12,6 +12,7 @@ protocol MovieLocalDataSourceProtocol {
   func saveMovies(_ movies: [Movie], page: Int) -> Completable
   func getMovies() -> Observable<[Movie]>
   func getMoviesForPage(page: Int) -> Observable<[Movie]>
+  func getMovieById(id: Int) -> Observable<Movie?>
   func clearAllMovies() -> Completable
 }
 
@@ -88,6 +89,30 @@ final class MovieLocalDataSource: MovieLocalDataSourceProtocol {
           let entities = try self.context.fetch(fetchRequest)
           let movies = entities.map { $0.toMovie() }
           observer.onNext(movies)
+          observer.onCompleted()
+        } catch {
+          observer.onError(error)
+        }
+      }
+      return Disposables.create()
+    }
+  }
+  
+  func getMovieById(id: Int) -> Observable<Movie?> {
+    return Observable.create { [weak self] observer in
+      guard let self = self else { return Disposables.create() }
+      
+      self.context.perform {
+        let fetchRequest: NSFetchRequest<MovieEntity> = MovieEntity.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %d", id)
+        
+        do {
+          let entities = try self.context.fetch(fetchRequest)
+          if let entity = entities.first {
+            observer.onNext(entity.toMovie())
+          } else {
+            observer.onNext(nil)
+          }
           observer.onCompleted()
         } catch {
           observer.onError(error)

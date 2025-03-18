@@ -61,5 +61,15 @@ class DependencyContainer {
       let viewModel = resolver.resolve(MovieViewModel.self)!
       return MovieViewController(viewModel: viewModel)
     }
+    
+    container.register(MovieDetailViewModel.self) { (resolver, movieId: Int) in
+      let useCase = resolver.resolve(MovieUseCaseProtocol.self)!
+      return MovieDetailViewModel(useCase: useCase, movieId: movieId)
+    }
+    
+    container.register(MovieDetailViewController.self) { (resolver, movieId: Int) in
+      let viewModel = resolver.resolve(MovieDetailViewModel.self, argument: movieId)!
+      return MovieDetailViewController(viewModel: viewModel, movieId: movieId)
+    }
   }
 }

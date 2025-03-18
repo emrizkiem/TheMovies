@@ -9,14 +9,14 @@ import RxSwift
 import RxCocoa
 
 final class MovieViewModel {
-  let loadTrigger = PublishRelay<Void>()
-  let loadMoreTrigger = PublishRelay<Void>()
-  let refreshTrigger = PublishRelay<Void>()
-  let clearCacheTrigger = PublishRelay<Void>()
-  let movies = BehaviorRelay<[Movie]>(value: [])
-  let isLoading = BehaviorRelay<Bool>(value: false)
-  let error = PublishRelay<String>()
-  let searchTrigger = BehaviorRelay<String>(value: "")
+  private let moviesRelay = BehaviorRelay<[Movie]>(value: [])
+  private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+  private let errorRelay = PublishRelay<String>()
+  private let loadTriggerRelay = PublishRelay<Void>()
+  private let loadMoreTriggerRelay = PublishRelay<Void>()
+  private let refreshTriggerRelay = PublishRelay<Void>()
+  private let clearCacheTriggerRelay = PublishRelay<Void>()
+  private let searchTriggerRelay = BehaviorRelay<String>(value: "")
   
   private let useCase: MovieUseCaseProtocol
   private let disposeBag = DisposeBag()
@@ -30,44 +30,85 @@ final class MovieViewModel {
   
   init(useCase: MovieUseCaseProtocol) {
     self.useCase = useCase
-    
     setupBindings()
   }
   
+  func load() {
+    loadTriggerRelay.accept(())
+  }
+  
+  func loadMore() {
+    loadMoreTriggerRelay.accept(())
+  }
+  
+  func refresh() {
+    refreshTriggerRelay.accept(())
+  }
+  
+  func clearCache() {
+    clearCacheTriggerRelay.accept(())
+  }
+  
+  func search(query: String) {
+    searchTriggerRelay.accept(query)
+  }
+  
+  func getMovies() -> Driver<[Movie]> {
+    return moviesRelay.asDriver()
+  }
+  
+  func isLoading() -> Driver<Bool> {
+    return isLoadingRelay.asDriver()
+  }
+  
+  func setError() -> Driver<String> {
+    return errorRelay.asDriver(onErrorJustReturn: "Unknown error occurred")
+  }
+  
   private func setupBindings() {
-    loadTrigger
+    setupLoadBinding()
+    setupSearchBinding()
+    setupRefreshBinding()
+    setupLoadMoreBinding()
+    setupClearCacheBinding()
+  }
+  
+  private func setupLoadBinding() {
+    loadTriggerRelay
       .do(onNext: { [weak self] _ in
-        self?.isLoading.accept(true)
+        self?.isLoadingRelay.accept(true)
         self?.currentPage = 1
       })
       .flatMapLatest { [weak self] _ -> Observable<MovieList> in
         guard let self = self else { return Observable.empty() }
         return self.useCase.getMovies(page: self.currentPage)
           .catch { error in
-            self.error.accept(error.localizedDescription)
+            self.errorRelay.accept(error.localizedDescription)
             return Observable.empty()
           }
       }
       .do(onNext: { [weak self] list in
         self?.totalPages = list.totalPages
-        self?.isLoading.accept(false)
+        self?.isLoadingRelay.accept(false)
       })
       .map { $0.results }
-      .bind(to: movies)
+      .bind(to: moviesRelay)
       .disposed(by: disposeBag)
-    
-    searchTrigger
+  }
+  
+  private func setupSearchBinding() {
+    searchTriggerRelay
       .skip(1)
       .distinctUntilChanged()
       .do(onNext: { [weak self] query in
-        self?.isLoading.accept(true)
+        self?.isLoadingRelay.accept(true)
         self?.isSearchMode = query.isEmpty ? false : true
         self?.lastSearchQuery = query
         self?.searchPage = 1
         
         if query.isEmpty {
           self?.currentPage = 1
-          self?.loadTrigger.accept(())
+          self?.loadTriggerRelay.accept(())
           return
         }
       })
@@ -76,20 +117,62 @@ final class MovieViewModel {
         guard let self = self else { return Observable.empty() }
         return self.useCase.searchMovies(query: query, page: self.searchPage)
           .catch { error in
-            self.error.accept(error.localizedDescription)
-            self.isLoading.accept(false)
+            self.errorRelay.accept(error.localizedDescription)
+            self.isLoadingRelay.accept(false)
             return Observable.empty()
           }
       }
       .do(onNext: { [weak self] list in
         self?.searchTotalPages = list.totalPages
-        self?.isLoading.accept(false)
+        self?.isLoadingRelay.accept(false)
       })
       .map { $0.results }
-      .bind(to: movies)
+      .bind(to: moviesRelay)
       .disposed(by: disposeBag)
-    
-    loadMoreTrigger
+  }
+  
+  private func setupRefreshBinding() {
+    refreshTriggerRelay
+      .do(onNext: { [weak self] _ in
+        self?.isLoadingRelay.accept(true)
+        if self?.isSearchMode == true {
+          self?.searchPage = 1
+        } else {
+          self?.currentPage = 1
+        }
+      })
+      .flatMapLatest { [weak self] _ -> Observable<MovieList> in
+        guard let self = self else { return Observable.empty() }
+        
+        if self.isSearchMode {
+          return self.useCase.searchMovies(query: self.lastSearchQuery, page: 1)
+            .catch { error in
+              self.errorRelay.accept(error.localizedDescription)
+              return Observable.empty()
+            }
+        } else {
+          return self.useCase.refreshMovies(page: 1)
+            .catch { error in
+              self.errorRelay.accept(error.localizedDescription)
+              return Observable.empty()
+            }
+        }
+      }
+      .do(onNext: { [weak self] list in
+        if self?.isSearchMode == true {
+          self?.searchTotalPages = list.totalPages
+        } else {
+          self?.totalPages = list.totalPages
+        }
+        self?.isLoadingRelay.accept(false)
+      })
+      .map { $0.results }
+      .bind(to: moviesRelay)
+      .disposed(by: disposeBag)
+  }
+  
+  private func setupLoadMoreBinding() {
+    loadMoreTriggerRelay
       .filter { [weak self] _ in
         guard let self = self else { return false }
         if self.isSearchMode {
@@ -112,14 +195,14 @@ final class MovieViewModel {
         if self.isSearchMode {
           return self.useCase.searchMovies(query: self.lastSearchQuery, page: self.searchPage)
             .catch { error in
-              self.error.accept(error.localizedDescription)
+              self.errorRelay.accept(error.localizedDescription)
               self.isLoadingMore = false
               return Observable.empty()
             }
         } else {
           return self.useCase.getMovies(page: self.currentPage)
             .catch { error in
-              self.error.accept(error.localizedDescription)
+              self.errorRelay.accept(error.localizedDescription)
               self.isLoadingMore = false
               return Observable.empty()
             }
@@ -135,63 +218,27 @@ final class MovieViewModel {
       })
       .map { [weak self] list in
         guard let self = self else { return [] }
-        return self.movies.value + list.results
+        return self.moviesRelay.value + list.results
       }
-      .bind(to: movies)
+      .bind(to: moviesRelay)
       .disposed(by: disposeBag)
-    
-    refreshTrigger
-      .do(onNext: { [weak self] _ in
-        self?.isLoading.accept(true)
-        if self?.isSearchMode == true {
-          self?.searchPage = 1
-        } else {
-          self?.currentPage = 1
-        }
-      })
-      .flatMapLatest { [weak self] _ -> Observable<MovieList> in
-        guard let self = self else { return Observable.empty() }
-        
-        if self.isSearchMode {
-          return self.useCase.searchMovies(query: self.lastSearchQuery, page: 1)
-            .catch { error in
-              self.error.accept(error.localizedDescription)
-              return Observable.empty()
-            }
-        } else {
-          return self.useCase.refreshMovies(page: 1)
-            .catch { error in
-              self.error.accept(error.localizedDescription)
-              return Observable.empty()
-            }
-        }
-      }
-      .do(onNext: { [weak self] list in
-        if self?.isSearchMode == true {
-          self?.searchTotalPages = list.totalPages
-        } else {
-          self?.totalPages = list.totalPages
-        }
-        self?.isLoading.accept(false)
-      })
-      .map { $0.results }
-      .bind(to: movies)
-      .disposed(by: disposeBag)
-    
-    clearCacheTrigger
+  }
+  
+  private func setupClearCacheBinding() {
+    clearCacheTriggerRelay
       .flatMapLatest { [weak self] _ -> Observable<Void> in
         guard let self = self else { return Observable.empty() }
         return self.useCase.clearCache()
           .andThen(Observable.just(()))
           .catch { error in
-            self.error.accept("Failed to clear cache: \(error.localizedDescription)")
+            self.errorRelay.accept("Failed to clear cache: \(error.localizedDescription)")
             return Observable.empty()
           }
       }
       .subscribe(onNext: { [weak self] _ in
         self?.currentPage = 1
         self?.totalPages = 1
-        self?.movies.accept([])
+        self?.moviesRelay.accept([])
       })
       .disposed(by: disposeBag)
   }

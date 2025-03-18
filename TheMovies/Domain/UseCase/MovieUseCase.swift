@@ -11,6 +11,7 @@ protocol MovieUseCaseProtocol {
   func getMovies(page: Int) -> Observable<MovieList>
   func refreshMovies(page: Int) -> Observable<MovieList>
   func searchMovies(query: String, page: Int) -> Observable<MovieList>
+  func detailMovies(_ id: Int) -> Observable<MovieDetail>
   func clearCache() -> Completable
 }
 
@@ -31,6 +32,10 @@ final class MovieUseCase: MovieUseCaseProtocol {
   
   func searchMovies(query: String, page: Int) -> Observable<MovieList> {
     return repository.searchMovies(query: query, page: page)
+  }
+  
+  func detailMovies(_ id: Int) -> Observable<MovieDetail> {
+    return repository.detailMovies(id)
   }
   
   func clearCache() -> Completable {

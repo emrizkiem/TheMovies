@@ -23,6 +23,7 @@ class MovieViewController: UIViewController {
   private let viewModel: MovieViewModel
   private let disposeBag = DisposeBag()
   
+  
   init(viewModel: MovieViewModel) {
     self.viewModel = viewModel
     super.init(nibName: "MovieViewController", bundle: nil)
@@ -35,9 +36,13 @@ class MovieViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     setupUI()
-    setupBindings()
+    bindViewModel()
     
-    viewModel.loadTrigger.accept(())
+    viewModel.load()
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    self.navigationController?.isNavigationBarHidden = false
   }
   
   private func setupUI() {
@@ -72,51 +77,56 @@ class MovieViewController: UIViewController {
     }
   }
   
-  private func setupBindings() {
-    viewModel.movies
-      .bind(to: collectionView.rx.items(cellIdentifier: MovieCell.identifier, cellType: MovieCell.self)) { (row, movie, cell) in
+  private func bindViewModel() {
+    viewModel.getMovies()
+      .drive(collectionView.rx.items(cellIdentifier: MovieCell.identifier, cellType: MovieCell.self)) { (row, movie, cell) in
         cell.configure(with: movie)
       }
       .disposed(by: disposeBag)
     
-    viewModel.isLoading
-      .bind(to: activityIndicator.rx.isAnimating)
+    viewModel.isLoading()
+      .drive(activityIndicator.rx.isAnimating)
       .disposed(by: disposeBag)
     
     refreshControl.rx.controlEvent(.valueChanged)
-      .bind(to: viewModel.refreshTrigger)
+      .subscribe(onNext: { [weak self] in
+        self?.viewModel.refresh()
+      })
       .disposed(by: disposeBag)
     
-    viewModel.error
-      .observe(on: MainScheduler.instance)
-      .subscribe(onNext: { [weak self] error in
+    viewModel.setError()
+      .drive(onNext: { [weak self] error in
         self?.showAlert(message: error)
         self?.refreshControl.endRefreshing()
       })
       .disposed(by: disposeBag)
     
-    viewModel.isLoading
+    viewModel.isLoading()
       .filter { !$0 }
-      .subscribe(onNext: { [weak self] _ in
+      .drive(onNext: { [weak self] _ in
         self?.refreshControl.endRefreshing()
       })
       .disposed(by: disposeBag)
     
-    collectionView.rx.willDisplayCell
-      .subscribe(onNext: { [weak self] cell, indexPath in
-        guard let self = self else { return }
-        let lastRow = self.viewModel.movies.value.count - 1
+    let moviesList = viewModel.getMovies().asObservable().share(replay: 1)
+
+    Observable.combineLatest(collectionView.rx.willDisplayCell, moviesList)
+      .subscribe(onNext: { [weak self] args, movies in
+        let (_, indexPath) = args
+        let lastRow = movies.count - 1
         if indexPath.row == lastRow {
-          self.viewModel.loadMoreTrigger.accept(())
+          self?.viewModel.loadMore()
         }
       })
       .disposed(by: disposeBag)
     
-    collectionView.rx.itemSelected
-      .subscribe(onNext: { [weak self] indexPath in
-        guard let self = self else { return }
-        let movie = self.viewModel.movies.value[indexPath.row]
-        self.showMovieDetail(movie: movie)
+    Observable.combineLatest(collectionView.rx.itemSelected, moviesList)
+      .subscribe(onNext: { [weak self] args, movies in
+        let indexPath = args
+        if indexPath.row < movies.count {
+          let movie = movies[indexPath.row]
+          self?.showMovieDetail(movie: movie)
+        }
       })
       .disposed(by: disposeBag)
     
@@ -124,9 +134,11 @@ class MovieViewController: UIViewController {
       .orEmpty
       .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
       .distinctUntilChanged()
-      .bind(to: viewModel.searchTrigger)
+      .subscribe(onNext: { [weak self] query in
+        self?.viewModel.search(query: query)
+      })
       .disposed(by: disposeBag)
-      
+    
     searchBar.rx.searchButtonClicked
       .subscribe(onNext: { [weak self] in
         self?.searchBar.resignFirstResponder()
@@ -141,10 +153,11 @@ class MovieViewController: UIViewController {
   }
   
   private func showMovieDetail(movie: Movie) {
-    // Implement navigation to movie detail screen
-    // Example:
-    // let detailVM = MovieDetailViewModel(movie: movie, movieRepository: MovieRepository())
-    // let detailVC = MovieDetailViewController(viewModel: detailVM)
-    // navigationController?.pushViewController(detailVC, animated: true)
+    if let detailVC = DependencyContainer.shared.container.resolve(
+      MovieDetailViewController.self,
+      argument: movie.id
+    ) {
+      navigationController?.pushViewController(detailVC, animated: true)
+    }
   }
 }
