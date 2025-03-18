@@ -9,6 +9,8 @@ target 'TheMovies' do
   pod 'Moya/RxSwift', '~> 15.0'
   pod 'RxSwift', '~> 6.0'
   pod 'RxCocoa', '~> 6.0'
+  pod 'Swinject'
+  pod 'Kingfisher'
   
   target 'TheMoviesTests' do
     inherit! :search_paths
