@@ -15,13 +15,13 @@ final class MovieViewModel {
   let isLoading = BehaviorRelay<Bool>(value: false)
   let error = PublishRelay<String>()
   
-  private let useCase: GetMoviesUseCase
+  private let useCase: MovieUseCaseProtocol
   private let disposeBag = DisposeBag()
   private var currentPage = 1
   private var totalPages = 1
   private var isLoadingMore = false
   
-  init(useCase: GetMoviesUseCase) {
+  init(useCase: MovieUseCaseProtocol) {
     self.useCase = useCase
     
     setupBindings()

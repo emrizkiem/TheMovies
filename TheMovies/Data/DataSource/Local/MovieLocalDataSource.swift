@@ -8,12 +8,12 @@
 import RxSwift
 import CoreData
 
-protocol MovieLocalDataSource {
+protocol MovieLocalDataSourceProtocol {
   func saveMovies(_ movies: [Movie]) -> Completable
   func getMovies() -> Observable<[Movie]>
 }
 
-final class MovieLocalDataSourceImpl: MovieLocalDataSource {
+final class MovieLocalDataSource: MovieLocalDataSourceProtocol {
   private let context: NSManagedObjectContext
   
   init(context: NSManagedObjectContext) {
